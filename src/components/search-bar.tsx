@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/locale-toggle";
+import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   className?: string;
@@ -27,25 +28,34 @@ export function SearchBar({ className, defaultValue = "", size = "default" }: Se
     setTimeout(() => setLoading(false), 500);
   };
 
+  const isLarge = size === "lg";
+
   return (
     <form onSubmit={handleSearch} className={className}>
-      <div className="relative flex items-center">
-        <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <div
+        className={cn(
+          "relative flex items-center rounded-xl border bg-white shadow-soft transition-shadow focus-within:border-teal/40 focus-within:shadow-glow",
+          isLarge ? "h-14" : "h-11"
+        )}
+      >
+        <Search className="absolute left-4 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
           type="search"
           placeholder={t("searchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className={size === "lg" ? "pl-10 h-12 text-base" : "pl-10"}
+          className={cn(
+            "border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0",
+            isLarge ? "h-14 pl-11 pr-28 text-base" : "h-11 pl-10 pr-20"
+          )}
         />
         <Button
           type="submit"
-          size={size === "lg" ? "default" : "sm"}
-          className="absolute right-1"
+          size={isLarge ? "default" : "sm"}
+          className={cn("absolute right-1.5 rounded-lg", isLarge && "h-10 px-5")}
           loading={loading}
         >
-          <Search className="h-4 w-4" />
-          <span className="sr-only">Search</span>
+          Search
         </Button>
       </div>
     </form>

@@ -6,7 +6,6 @@ import {
   getMockVendorBySlug,
   getMockVendors,
 } from "@/lib/data/sample-data";
-import { mergeProductCategories } from "@/lib/data/categories";
 import type { Category, Product, Vendor, VendorWithProducts } from "@/types/database";
 
 export async function getVendors(type?: "restaurant" | "supplier"): Promise<VendorWithProducts[]> {
@@ -122,20 +121,13 @@ export async function getCategories(): Promise<Category[]> {
     return getMockCategories();
   }
 
-  const [{ data: catalog, error }, { data: productRows }] = await Promise.all([
-    supabase.from("categories").select("*").order("name"),
-    supabase.from("products").select("category"),
-  ]);
+  const { data, error } = await supabase.from("categories").select("*").order("name");
 
-  if (error) {
+  if (error || !data?.length) {
     return getMockCategories();
   }
 
-  const catalogCategories = (catalog as Category[] | null) ?? [];
-  const productSlugs = (productRows ?? []).map((row) => row.category as string);
-
-  const merged = mergeProductCategories(catalogCategories, productSlugs);
-  return merged.length > 0 ? merged : getMockCategories();
+  return data as Category[];
 }
 
 export async function searchVendors(query: string): Promise<VendorWithProducts[]> {

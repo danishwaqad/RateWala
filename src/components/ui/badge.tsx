@@ -7,7 +7,7 @@ const Badge = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEleme
       default: "bg-primary text-primary-foreground",
       secondary: "bg-secondary text-secondary-foreground",
       outline: "border border-input bg-background text-foreground",
-      verified: "bg-teal-50 text-teal-700 border border-teal-200",
+      verified: "bg-teal-50 text-teal-700 border border-teal-200/80 shadow-sm",
     };
     return (
       <div

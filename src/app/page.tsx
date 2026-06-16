@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/hero-section";
 import { StatsSection } from "@/components/stats-section";
 import { CategoryGrid } from "@/components/category-grid";
 import { FeaturedVendors } from "@/components/featured-vendors";
+import { SectionHeader } from "@/components/section-header";
 import { getCategories, getFeaturedVendors } from "@/lib/data/vendors";
 import { t } from "@/lib/i18n";
 
@@ -18,12 +19,14 @@ export default async function HomePage() {
       <HeroSection />
       <StatsSection />
 
-      <section className="border-t bg-slate-50/80 py-8 md:py-10">
+      <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
-          <div className="mb-5">
-            <h2 className="text-xl font-bold md:text-2xl">{t("categories")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t("categoriesSubtitle")}</p>
-          </div>
+          <SectionHeader
+            eyebrow="Categories"
+            title={t("categories")}
+            subtitle={t("categoriesSubtitle")}
+            className="mb-8"
+          />
           <CategoryGrid categories={categories} />
         </div>
       </section>

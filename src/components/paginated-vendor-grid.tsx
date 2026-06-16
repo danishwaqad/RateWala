@@ -42,14 +42,14 @@ export function PaginatedVendorGrid({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((vendor) => (
           <VendorCard key={vendor.id} vendor={vendor} variant={variant} />
         ))}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between border-t border-slate-200 pt-4">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between border-t border-border/60 pt-5">
           <p className="text-sm text-muted-foreground">
             {t("showingVendors")
               .replace("{from}", String(start + 1))
@@ -61,6 +61,7 @@ export function PaginatedVendorGrid({
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-xl"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >

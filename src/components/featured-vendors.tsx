@@ -2,6 +2,7 @@
 
 import type { VendorWithProducts } from "@/types/database";
 import { PaginatedVendorGrid } from "@/components/paginated-vendor-grid";
+import { SectionHeader } from "@/components/section-header";
 import { useTranslation } from "@/components/locale-toggle";
 
 interface FeaturedVendorsProps {
@@ -12,12 +13,16 @@ export function FeaturedVendors({ vendors }: FeaturedVendorsProps) {
   const { t } = useTranslation();
 
   return (
-    <section className="container mx-auto px-4 py-8 md:py-10">
-      <div className="mb-5">
-        <h2 className="text-xl font-bold md:text-2xl">{t("topVendors")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("featuredSubtitle")}</p>
+    <section className="border-t bg-white py-12 md:py-16">
+      <div className="container mx-auto px-4">
+        <SectionHeader
+          eyebrow="Discover"
+          title={t("topVendors")}
+          subtitle={t("featuredSubtitle")}
+          className="mb-8"
+        />
+        <PaginatedVendorGrid vendors={vendors} variant="featured" pageSize={6} />
       </div>
-      <PaginatedVendorGrid vendors={vendors} variant="featured" pageSize={6} />
     </section>
   );
 }

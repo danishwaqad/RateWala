@@ -13,10 +13,10 @@ import {
   Package,
   ChevronLeft,
   ChevronRight,
+  ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
 import type { Category } from "@/types/database";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/components/locale-toggle";
 import { cn } from "@/lib/utils";
@@ -58,27 +58,30 @@ export function CategoryGrid({ categories, className, pageSize = PAGE_SIZE }: Ca
   const visible = categories.slice(start, start + pageSize);
 
   return (
-    <div className={cn("space-y-5", className)}>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+    <div className={cn("space-y-6", className)}>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {visible.map((category) => {
           const Icon = iconMap[category.icon ?? "package"] ?? Package;
           return (
             <Link key={category.id} href={`/search?q=${encodeURIComponent(category.slug)}`}>
-              <Card className="group h-full border-slate-200 transition-all hover:border-teal/40 hover:shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center gap-2 p-3 sm:p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal/10 text-teal transition-colors group-hover:bg-teal group-hover:text-white">
+              <div className="group relative overflow-hidden rounded-2xl border border-border/70 bg-white p-4 shadow-soft card-hover sm:p-5">
+                <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
+                  <ArrowUpRight className="h-4 w-4 text-teal" />
+                </div>
+                <div className="flex flex-col items-center justify-center gap-3 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-50 to-teal-100 text-teal ring-1 ring-teal/10 transition-all group-hover:from-teal-500 group-hover:to-teal-600 group-hover:text-white group-hover:shadow-glow">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-medium text-center">{category.name}</span>
-                </CardContent>
-              </Card>
+                  <span className="text-sm font-semibold text-foreground">{category.name}</span>
+                </div>
+              </div>
             </Link>
           );
         })}
       </div>
 
       {totalPages > 1 && (
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between border-t border-slate-200 pt-4">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between border-t border-border/60 pt-5">
           <p className="text-sm text-muted-foreground">
             {t("showingCategories")
               .replace("{from}", String(start + 1))
@@ -90,19 +93,21 @@ export function CategoryGrid({ categories, className, pageSize = PAGE_SIZE }: Ca
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-xl"
               disabled={page <= 1}
               onClick={() => setPage((p) => p - 1)}
             >
               <ChevronLeft className="h-4 w-4" />
               {t("previous")}
             </Button>
-            <span className="text-sm font-medium px-2">
+            <span className="text-sm font-medium px-2 tabular-nums">
               {page} / {totalPages}
             </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
+              className="rounded-xl"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
             >

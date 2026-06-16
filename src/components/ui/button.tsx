@@ -5,16 +5,16 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-teal-700",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-orange-600",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        default: "bg-primary text-primary-foreground shadow-md shadow-teal/20 hover:bg-teal-700 hover:shadow-lg hover:shadow-teal/25",
+        secondary: "bg-secondary text-secondary-foreground shadow-md shadow-orange/20 hover:bg-orange-600",
+        outline: "border border-input bg-white/80 hover:bg-accent hover:text-accent-foreground hover:border-teal/30",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        whatsapp: "bg-[#25D366] text-white hover:bg-[#1da851]",
+        whatsapp: "bg-[#25D366] text-white shadow-md hover:bg-[#1da851]",
       },
       size: {
         default: "h-10 px-4 py-2",

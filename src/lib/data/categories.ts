@@ -1,6 +1,6 @@
 import { SAMPLE_CATEGORIES } from "@/lib/data/sample-data";
 import { formatCategoryLabel } from "@/lib/utils";
-import type { Category, CategoryType } from "@/types/database";
+import type { CategoryType } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface CategoryOption {
@@ -40,8 +40,8 @@ export async function ensureCategoryInCatalog(
   supabase: SupabaseClient,
   slug: string,
   categoryType: CategoryType
-) {
-  if (!slug || slug === "general") return;
+): Promise<{ ok: boolean; error?: string }> {
+  if (!slug || slug === "general") return { ok: true };
 
   const { data: existing } = await supabase
     .from("categories")
@@ -49,36 +49,22 @@ export async function ensureCategoryInCatalog(
     .eq("slug", slug)
     .maybeSingle();
 
-  if (existing) return;
+  if (existing) return { ok: true };
 
-  await supabase.from("categories").insert({
+  const { error } = await supabase.from("categories").insert({
     name: formatCategoryLabel(slug),
     slug,
     type: categoryType,
     icon: categoryType === "food" ? "utensils" : "package",
   });
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
 }
 
-export function mergeProductCategories(
-  catalog: Category[],
-  productCategories: string[]
-): Category[] {
-  const map = new Map<string, Category>();
-
-  for (const cat of catalog) {
-    map.set(cat.slug, cat);
-  }
-
-  for (const slug of productCategories) {
-    if (!slug || slug === "general" || map.has(slug)) continue;
-    map.set(slug, {
-      id: `product-${slug}`,
-      name: formatCategoryLabel(slug),
-      slug,
-      type: "food",
-      icon: "utensils",
-    });
-  }
-
-  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+export function categoriesToOptions(categories: { name: string; slug: string }[]): CategoryOption[] {
+  return categories.map((cat) => ({ value: cat.slug, label: cat.name }));
 }

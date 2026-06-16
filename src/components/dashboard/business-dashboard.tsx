@@ -14,7 +14,7 @@ import { ProductTable } from "@/components/product-table";
 import { CategoryCombobox } from "@/components/category-combobox";
 import type { CategoryComboboxHandle } from "@/components/category-combobox";
 import { useTranslation } from "@/components/locale-toggle";
-import { buildCategoryOptions, ensureCategoryInCatalog, type CategoryOption } from "@/lib/data/categories";
+import { categoriesToOptions, ensureCategoryInCatalog, type CategoryOption } from "@/lib/data/categories";
 import { formatPrice, slugify } from "@/lib/utils";
 import type { Product, Vendor } from "@/types/database";
 
@@ -115,11 +115,7 @@ export function BusinessDashboard() {
         .order("name");
 
       setCategoryOptions(
-        buildCategoryOptions(
-          categoryType,
-          products.map((p) => p.category),
-          data ?? undefined
-        )
+        categoriesToOptions(data ?? [])
       );
     }
 
@@ -205,6 +201,18 @@ export function BusinessDashboard() {
     const category =
       slugify(committedCategory || itemCategory) || committedCategory || itemCategory || "general";
 
+    const categoryType = vendor.type === "supplier" ? "wholesale" : "food";
+    const catalogResult = await ensureCategoryInCatalog(supabase, category, categoryType);
+
+    if (!catalogResult.ok) {
+      setProductLoading(false);
+      setError(
+        catalogResult.error ??
+          "Could not save category. Run auth.sql in Supabase (categories insert permission)."
+      );
+      return;
+    }
+
     const { error: insertError } = await supabase.from("products").insert({
       vendor_id: vendor.id,
       name: itemName,
@@ -220,9 +228,6 @@ export function BusinessDashboard() {
       setError(insertError.message);
       return;
     }
-
-    const categoryType = vendor.type === "supplier" ? "wholesale" : "food";
-    await ensureCategoryInCatalog(supabase, category, categoryType);
 
     setItemName("");
     setItemPrice("");
