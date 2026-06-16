@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BusinessDashboard } from "@/components/dashboard/business-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { getWeeklyClickCount } from "@/lib/data/clicks";
 import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -34,9 +35,11 @@ export default async function DashboardPage() {
     redirect("/add-shop");
   }
 
+  const weeklyClicks = await getWeeklyClickCount(vendor.id);
+
   return (
     <div className="container mx-auto max-w-3xl px-4 py-6 md:py-8">
-      <BusinessDashboard />
+      <BusinessDashboard initialWeeklyClicks={weeklyClicks} />
     </div>
   );
 }

@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductTable } from "@/components/product-table";
 import { VendorReviews } from "@/components/vendor-reviews";
 import { StarRatingDisplay } from "@/components/star-rating-input";
+import { StaleRatesBadge } from "@/components/stale-rates-badge";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 import { useTranslation } from "@/components/locale-toggle";
 import { useOwnerVendor } from "@/lib/hooks/use-owner-vendor";
 import { getWhatsAppUrl } from "@/lib/utils";
@@ -17,8 +19,16 @@ import { useState } from "react";
 interface VendorDetailProps {
   vendor: VendorWithProducts;
   reviews: VendorReview[];
+  ratesStale?: boolean;
+  showPendingBanner?: boolean;
 }
-export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
+
+export function VendorDetail({
+  vendor,
+  reviews,
+  ratesStale = false,
+  showPendingBanner = false,
+}: VendorDetailProps) {
   const { t } = useTranslation();
   const { vendor: ownerVendor } = useOwnerVendor();
   const [loading, setLoading] = useState(false);
@@ -26,9 +36,24 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
   const reviewCount = vendor.review_count ?? 0;
   const hasReviews = reviewCount > 0;
   const whatsappMessage = `Hi, I'd like to inquire about prices at ${vendor.name}.`;
+  const whatsappUrl = getWhatsAppUrl(vendor.whatsapp, whatsappMessage);
+
+  if (vendor.approval_status === "rejected" && !isOwner) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <p className="text-muted-foreground">This listing is not available.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
+      {showPendingBanner && isOwner && (
+        <div className="border-b bg-amber-50">
+          <div className="container mx-auto px-4 py-2.5 text-sm text-amber-900">{t("pendingApproval")}</div>
+        </div>
+      )}
+
       {isOwner && (
         <div className="border-b bg-teal/5">
           <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
@@ -42,6 +67,7 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
           </div>
         </div>
       )}
+
       <div className="relative h-48 sm:h-64 md:h-80 overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -64,11 +90,13 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
                 {t("verified")}
               </Badge>
             )}
+            {ratesStale && <StaleRatesBadge className="border-amber-200/60 bg-amber-500/20 text-amber-50" />}
             {hasReviews ? (
               <StarRatingDisplay rating={vendor.rating} className="text-sm text-white" size="sm" />
             ) : (
               <Badge className="bg-white/20 text-white border-white/30">{t("newBusiness")}</Badge>
-            )}          </div>
+            )}
+          </div>
           <h1 className="text-2xl sm:text-3xl font-bold">{vendor.name}</h1>
         </div>
       </div>
@@ -88,25 +116,18 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
             </p>
           </div>
 
-          <Button
-            variant="whatsapp"
-            size="lg"
-            className="shrink-0"
-            loading={loading}
-            asChild
-            onClick={() => {
-              setLoading(true);
-              setTimeout(() => setLoading(false), 400);
-            }}
-          >
-            <a
-              href={getWhatsAppUrl(vendor.whatsapp, whatsappMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
+          <Button variant="whatsapp" size="lg" className="shrink-0 w-full sm:w-auto" loading={loading} asChild>
+            <WhatsAppLink
+              vendorId={vendor.id}
+              href={whatsappUrl}
+              onNavigate={() => {
+                setLoading(true);
+                setTimeout(() => setLoading(false), 400);
+              }}
             >
               <MessageCircle className="h-5 w-5" />
               {t("orderWhatsApp")}
-            </a>
+            </WhatsAppLink>
           </Button>
         </div>
 
@@ -124,6 +145,7 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
           <TabsContent value="rates">
             <ProductTable
               products={vendor.products}
+              ratesStale={ratesStale}
               labels={{
                 item: t("item"),
                 rate: t("rate"),
@@ -159,7 +181,8 @@ export function VendorDetail({ vendor, reviews }: VendorDetailProps) {
               initialReviews={reviews}
             />
           </TabsContent>
-        </Tabs>      </div>
+        </Tabs>
+      </div>
     </div>
   );
 }

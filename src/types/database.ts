@@ -1,5 +1,6 @@
 export type VendorType = "restaurant" | "supplier";
 export type CategoryType = "food" | "wholesale";
+export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 export interface Vendor {
   id: string;
@@ -14,9 +15,11 @@ export interface Vendor {
   rating: number;
   review_count?: number;
   is_verified: boolean;
+  approval_status: ApprovalStatus;
   description?: string | null;
   owner_id?: string | null;
   created_at: string;
+  last_reminder_at?: string | null;
 }
 
 export interface Product {
@@ -43,6 +46,12 @@ export interface VendorWithProducts extends Vendor {
   min_price?: number;
 }
 
+export interface Click {
+  id: string;
+  vendor_id: string;
+  clicked_at: string;
+}
+
 export interface VendorReview {
   id: string;
   vendor_id: string;
@@ -67,13 +76,29 @@ export interface VendorInsert {
   owner_id: string;
 }
 
+export interface VendorUpdate {
+  name?: string;
+  slug?: string;
+  type?: VendorType;
+  area?: string;
+  address?: string;
+  phone?: string;
+  whatsapp?: string;
+  image_url?: string;
+  description?: string | null;
+  owner_id?: string;
+  is_verified?: boolean;
+  approval_status?: ApprovalStatus;
+  last_reminder_at?: string | null;
+}
+
 export type Database = {
   public: {
     Tables: {
       vendors: {
         Row: Vendor;
         Insert: VendorInsert;
-        Update: Partial<VendorInsert>;
+        Update: VendorUpdate;
         Relationships: [];
       };
       products: {
@@ -96,6 +121,12 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<VendorReview, "id" | "vendor_id" | "user_id">>;
+        Relationships: [];
+      };
+      clicks: {
+        Row: Click;
+        Insert: { vendor_id: string; clicked_at?: string };
+        Update: Partial<Click>;
         Relationships: [];
       };
     };

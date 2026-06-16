@@ -36,13 +36,13 @@ export function HeroSection() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Button size="lg" asChild className="group rounded-xl shadow-glow">
+            <Button size="lg" asChild className="group w-full rounded-xl shadow-glow sm:w-auto">
               <Link href="/menu">
                 {t("viewMenu")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="rounded-xl bg-white/80">
+            <Button size="lg" variant="outline" asChild className="w-full rounded-xl bg-white/80 sm:w-auto">
               <Link href="/mandi">
                 {t("mandiRates")}
                 <ArrowRight className="h-4 w-4" />

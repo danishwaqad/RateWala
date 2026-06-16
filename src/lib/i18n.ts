@@ -121,6 +121,15 @@ export const dictionary = {
   edited: "edited",
   categoryPickOrType: "Select from the list or type a new category name.",
   addCategoryPrefix: "Add new category",
+  staleRatesBadge: "Rate purana ho sakta hai",
+  staleRatesNotice:
+    "Is business ki rates 7 din se update nahi hui. Contact karne se pehle WhatsApp par confirm kar lein.",
+  weeklyContacts: "Is hafte {count} logon ne aapko contact kiya",
+  pendingApproval:
+    "Aapki listing review mein hai. Admin approve karne ke baad public dikhegi.",
+  sendReminder: "Reminder bhejein",
+  reminderSent: "Reminder bhej di gayi.",
+  approvalPending: "Pending approval",
 } as const;
 
 export type DictionaryKey = keyof typeof dictionary;

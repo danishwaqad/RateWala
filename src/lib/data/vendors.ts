@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   getMockCategories,
@@ -46,7 +47,13 @@ export async function getVendors(type?: "restaurant" | "supplier"): Promise<Vend
 
 export async function getVendorBySlug(slug: string): Promise<VendorWithProducts | null> {
   noStore();
-  const supabase = createServerSupabaseClient();
+
+  let supabase = createServerSupabaseClient();
+  try {
+    supabase = await createClient();
+  } catch {
+    // Fall back to anon client when cookies are unavailable
+  }
 
   if (!supabase) {
     return getMockVendorBySlug(slug);

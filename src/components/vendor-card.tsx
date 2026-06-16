@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { VendorImage } from "@/components/vendor-image";
 import { StarRatingDisplay } from "@/components/star-rating-input";
+import { StaleRatesBadge } from "@/components/stale-rates-badge";
+import { WhatsAppLink } from "@/components/whatsapp-link";
 import { useTranslation } from "@/components/locale-toggle";
+import { isRatesStale } from "@/lib/data/freshness";
 import { formatPrice, getWhatsAppUrl, cn } from "@/lib/utils";
 
 interface VendorCardProps {
@@ -26,9 +29,11 @@ export function VendorCard({ vendor, variant = "listing", className }: VendorCar
   const topProduct = vendor.products[0];
   const reviewCount = vendor.review_count ?? 0;
   const hasReviews = reviewCount > 0;
+  const ratesStale = isRatesStale(vendor.products);
   const whatsappMessage = isSupplier
     ? `Hi, I'd like to confirm the price for ${topProduct?.name ?? "your products"}.`
     : `Hi, I'd like to place an order from ${vendor.name}.`;
+  const whatsappUrl = getWhatsAppUrl(vendor.whatsapp, whatsappMessage);
 
   const handleAction = () => {
     setBtnLoading(true);
@@ -45,12 +50,15 @@ export function VendorCard({ vendor, variant = "listing", className }: VendorCar
             className="transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80" />
-          {vendor.is_verified && (
-            <Badge variant="verified" className="absolute top-3 right-3 gap-1 border-white/20 bg-white/90 text-teal-700 backdrop-blur-sm">
-              <BadgeCheck className="h-3 w-3" />
-              {t("verified")}
-            </Badge>
-          )}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+            {vendor.is_verified && (
+              <Badge variant="verified" className="gap-1 border-white/20 bg-white/90 text-teal-700 backdrop-blur-sm">
+                <BadgeCheck className="h-3 w-3" />
+                {t("verified")}
+              </Badge>
+            )}
+            {ratesStale && <StaleRatesBadge />}
+          </div>
           <div className="absolute bottom-3 left-3 right-3">
             <p className="truncate text-sm font-medium text-white/90">{vendor.area}</p>
           </div>
@@ -125,14 +133,10 @@ export function VendorCard({ vendor, variant = "listing", className }: VendorCar
               asChild
               onClick={handleAction}
             >
-              <a
-                href={getWhatsAppUrl(vendor.whatsapp, whatsappMessage)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <WhatsAppLink vendorId={vendor.id} href={whatsappUrl} onNavigate={handleAction}>
                 {btnLoading ? null : <MessageCircle className="h-4 w-4" />}
                 WhatsApp
-              </a>
+              </WhatsAppLink>
             </Button>
           )}
 

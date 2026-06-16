@@ -16,9 +16,14 @@ import type { CategoryComboboxHandle } from "@/components/category-combobox";
 import { useTranslation } from "@/components/locale-toggle";
 import { categoriesToOptions, ensureCategoryInCatalog, type CategoryOption } from "@/lib/data/categories";
 import { formatPrice, slugify } from "@/lib/utils";
+import { daysSinceLastUpdate, isRatesStale } from "@/lib/data/freshness";
 import type { Product, Vendor } from "@/types/database";
 
-export function BusinessDashboard() {
+interface BusinessDashboardProps {
+  initialWeeklyClicks?: number;
+}
+
+export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboardProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -45,6 +50,8 @@ export function BusinessDashboard() {
   const [itemImagePreview, setItemImagePreview] = useState<string | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [weeklyClicks, setWeeklyClicks] = useState(initialWeeklyClicks);
+  const [reminderLoading, setReminderLoading] = useState(false);
   const itemImageInputRef = useRef<HTMLInputElement>(null);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const categoryComboboxRef = useRef<CategoryComboboxHandle>(null);
@@ -92,9 +99,47 @@ export function BusinessDashboard() {
       .eq("vendor_id", vendorData.id)
       .order("updated_at", { ascending: false });
 
+    const weekStart = new Date();
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+
+    const { count: clickCount } = await supabase
+      .from("clicks")
+      .select("id", { count: "exact", head: true })
+      .eq("vendor_id", vendorData.id)
+      .gte("clicked_at", weekStart.toISOString());
+
     setProducts(productData ?? []);
+    setWeeklyClicks(clickCount ?? 0);
     setLoading(false);
   }
+
+  const handleSendReminder = async () => {
+    setReminderLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    const response = await fetch("/api/reminders/stale", { method: "POST" });
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      error?: string;
+      emailSent?: boolean;
+      whatsappReminderUrl?: string;
+    };
+
+    setReminderLoading(false);
+
+    if (!response.ok) {
+      setError(payload.error ?? "Could not send reminder.");
+      return;
+    }
+
+    setSuccess(t("reminderSent"));
+
+    if (payload.whatsappReminderUrl) {
+      window.open(payload.whatsappReminderUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -298,6 +343,9 @@ export function BusinessDashboard() {
     );
   }
 
+  const ratesStale = isRatesStale(products);
+  const daysSinceUpdate = daysSinceLastUpdate(products);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -312,6 +360,34 @@ export function BusinessDashboard() {
           </Link>
         </Button>
       </div>
+
+      <div className="rounded-xl border bg-teal/5 px-4 py-3 text-sm text-teal-900">
+        {t("weeklyContacts").replace("{count}", String(weeklyClicks))}
+      </div>
+
+      {vendor.approval_status === "pending" && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {t("pendingApproval")}
+        </div>
+      )}
+
+      {ratesStale && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p>
+            {t("staleRatesNotice")} ({daysSinceUpdate} days)
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            loading={reminderLoading}
+            onClick={handleSendReminder}
+          >
+            {t("sendReminder")}
+          </Button>
+        </div>
+      )}
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -531,6 +607,7 @@ export function BusinessDashboard() {
             {products.length > 0 ? (
               <ProductTable
                 products={products}
+                ratesStale={ratesStale}
                 labels={{
                   item: t("item"),
                   rate: t("rate"),
