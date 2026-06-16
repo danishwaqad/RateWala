@@ -27,11 +27,11 @@ export async function sendStaleReminderEmail({
     body: JSON.stringify({
       from,
       to: [to],
-      subject: `${vendorName} — apni rates update karein | RateWala`,
+      subject: `Update your rates for ${vendorName} | RateWala`,
       html: `
-        <p>Assalam-o-Alaikum,</p>
-        <p>Aapki business listing <strong>${vendorName}</strong> ki rates <strong>${daysSinceUpdate} din</strong> se update nahi hui.</p>
-        <p>Customers ko sahi prices dikhane ke liye apna price list update karein:</p>
+        <p>Hello,</p>
+        <p>Your business listing <strong>${vendorName}</strong> has not been updated in <strong>${daysSinceUpdate} days</strong>.</p>
+        <p>Please update your price list so customers see accurate rates:</p>
         <p><a href="${dashboardUrl}">${dashboardUrl}</a></p>
         <p>— RateWala Team</p>
       `,

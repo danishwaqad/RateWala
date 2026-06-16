@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AddShopForm } from "@/components/auth/add-shop-form";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { isAdminEmail } from "@/lib/auth/admin";
 import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
@@ -20,6 +21,10 @@ export default async function AddShopPage() {
 
       if (!user) {
         redirect("/login?next=/add-shop");
+      }
+
+      if (isAdminEmail(user.email)) {
+        redirect("/admin");
       }
 
       const { data: existing } = await supabase

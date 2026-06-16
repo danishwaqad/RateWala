@@ -45,7 +45,16 @@ export function LoginForm() {
       return;
     }
 
-    router.push(next);
+    const roleResponse = await fetch("/api/auth/role", { cache: "no-store" });
+    const roleData = (await roleResponse.json()) as { isAdmin?: boolean };
+
+    if (roleData.isAdmin && (next === "/" || next === "/dashboard" || next === "/add-shop")) {
+      router.push("/admin");
+    } else if (!roleData.isAdmin && next === "/admin") {
+      router.push("/dashboard");
+    } else {
+      router.push(next);
+    }
     router.refresh();
   };
 

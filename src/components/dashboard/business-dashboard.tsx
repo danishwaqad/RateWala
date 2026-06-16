@@ -21,9 +21,15 @@ import type { Product, Vendor } from "@/types/database";
 
 interface BusinessDashboardProps {
   initialWeeklyClicks?: number;
+  adminVendorId?: string;
+  isAdminMode?: boolean;
 }
 
-export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboardProps) {
+export function BusinessDashboard({
+  initialWeeklyClicks = 0,
+  adminVendorId,
+  isAdminMode = false,
+}: BusinessDashboardProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [vendor, setVendor] = useState<Vendor | null>(null);
@@ -36,6 +42,8 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
   const [success, setSuccess] = useState<string | null>(null);
 
   const [imageUrl, setImageUrl] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessArea, setBusinessArea] = useState("");
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
@@ -65,6 +73,35 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
   }
 
   async function loadData() {
+    if (isAdminMode && adminVendorId) {
+      const response = await fetch(`/api/admin/vendors/${adminVendorId}`);
+      const payload = (await response.json()) as {
+        vendor?: Vendor;
+        products?: Product[];
+        weeklyClicks?: number;
+        error?: string;
+      };
+
+      if (!response.ok || !payload.vendor) {
+        setLoading(false);
+        setError(payload.error ?? "Could not load business.");
+        return;
+      }
+
+      setVendor(payload.vendor);
+      setBusinessName(payload.vendor.name);
+      setBusinessArea(payload.vendor.area);
+      setImageUrl(payload.vendor.image_url || "/placeholder.svg");
+      setDescription(payload.vendor.description || "");
+      setAddress(payload.vendor.address);
+      setPhone(payload.vendor.phone);
+      setWhatsapp(payload.vendor.whatsapp);
+      setProducts(payload.products ?? []);
+      setWeeklyClicks(payload.weeklyClicks ?? 0);
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
     const {
       data: { user },
@@ -87,6 +124,8 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
     }
 
     setVendor(vendorData);
+    setBusinessName(vendorData.name);
+    setBusinessArea(vendorData.area);
     setImageUrl(vendorData.image_url || "/placeholder.svg");
     setDescription(vendorData.description || "");
     setAddress(vendorData.address);
@@ -143,7 +182,7 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [adminVendorId, isAdminMode]);
 
   useEffect(() => {
     if (!vendor) return;
@@ -188,18 +227,39 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
       return;
     }
 
-    const { data: updated, error: updateError } = await supabase
-      .from("vendors")
-      .update({
-        image_url: finalImageUrl,
-        description: description || null,
-        address,
-        phone,
-        whatsapp: whatsapp || phone,
-      })
-      .eq("id", vendor.id)
-      .select("slug, image_url")
-      .single();
+    const { data: updated, error: updateError } = isAdminMode && adminVendorId
+      ? await (async () => {
+          const response = await fetch(`/api/admin/vendors/${adminVendorId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: businessName,
+              area: businessArea,
+              image_url: finalImageUrl,
+              description: description || null,
+              address,
+              phone,
+              whatsapp: whatsapp || phone,
+            }),
+          });
+          const payload = (await response.json()) as { vendor?: Vendor; error?: string };
+          return {
+            data: payload.vendor ? { slug: payload.vendor.slug, image_url: payload.vendor.image_url } : null,
+            error: response.ok ? null : { message: payload.error ?? "Update failed." },
+          };
+        })()
+      : await supabase
+          .from("vendors")
+          .update({
+            image_url: finalImageUrl,
+            description: description || null,
+            address,
+            phone,
+            whatsapp: whatsapp || phone,
+          })
+          .eq("id", vendor.id)
+          .select("slug, image_url")
+          .single();
 
     setSaving(false);
 
@@ -258,14 +318,30 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
       return;
     }
 
-    const { error: insertError } = await supabase.from("products").insert({
-      vendor_id: vendor.id,
-      name: itemName,
-      price: parseFloat(itemPrice),
-      unit: itemUnit,
-      category,
-      image_url: productImageUrl,
-    });
+    const { error: insertError } = isAdminMode && adminVendorId
+      ? await (async () => {
+          const response = await fetch(`/api/admin/vendors/${adminVendorId}/products`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: itemName,
+              price: parseFloat(itemPrice),
+              unit: itemUnit,
+              category,
+              image_url: productImageUrl,
+            }),
+          });
+          const payload = (await response.json()) as { error?: string };
+          return { error: response.ok ? null : { message: payload.error ?? "Could not add product." } };
+        })()
+      : await supabase.from("products").insert({
+          vendor_id: vendor.id,
+          name: itemName,
+          price: parseFloat(itemPrice),
+          unit: itemUnit,
+          category,
+          image_url: productImageUrl,
+        });
 
     setProductLoading(false);
 
@@ -304,12 +380,24 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
       return;
     }
 
-    const { data, error: deleteError } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", productId)
-      .eq("vendor_id", vendor.id)
-      .select("id");
+    const { data, error: deleteError } = isAdminMode && adminVendorId
+      ? await (async () => {
+          const response = await fetch(
+            `/api/admin/vendors/${adminVendorId}/products/${productId}`,
+            { method: "DELETE" }
+          );
+          const payload = (await response.json()) as { ok?: boolean; error?: string };
+          return {
+            data: response.ok ? [{ id: productId }] : null,
+            error: response.ok ? null : { message: payload.error ?? "Delete failed." },
+          };
+        })()
+      : await supabase
+          .from("products")
+          .delete()
+          .eq("id", productId)
+          .eq("vendor_id", vendor.id)
+          .select("id");
 
     setDeletingId(null);
 
@@ -335,10 +423,14 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
   if (!vendor) {
     return (
       <div className="rounded-xl border p-8 text-center">
-        <p className="text-muted-foreground">{t("noBusinessYet")}</p>
-        <Button asChild className="mt-4">
-          <Link href="/add-shop">{t("addShop")}</Link>
-        </Button>
+        <p className="text-muted-foreground">
+          {isAdminMode ? "Business not found." : t("noBusinessYet")}
+        </p>
+        {!isAdminMode && (
+          <Button asChild className="mt-4">
+            <Link href="/add-shop">{t("addShop")}</Link>
+          </Button>
+        )}
       </div>
     );
   }
@@ -350,7 +442,9 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t("myBusiness")}</h1>
+          <h1 className="text-2xl font-bold">
+            {isAdminMode ? t("adminManagingBusiness") : t("myBusiness")}
+          </h1>
           <p className="text-sm text-muted-foreground">{vendor.name}</p>
         </div>
         <Button variant="outline" asChild>
@@ -365,13 +459,13 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
         {t("weeklyContacts").replace("{count}", String(weeklyClicks))}
       </div>
 
-      {vendor.approval_status === "pending" && (
+      {vendor.approval_status === "pending" && !isAdminMode && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {t("pendingApproval")}
         </div>
       )}
 
-      {ratesStale && (
+      {ratesStale && !isAdminMode && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <p>
             {t("staleRatesNotice")} ({daysSinceUpdate} days)
@@ -408,6 +502,29 @@ export function BusinessDashboard({ initialWeeklyClicks = 0 }: BusinessDashboard
 
         <TabsContent value="profile">
           <form onSubmit={handleSaveProfile} className="space-y-5 rounded-xl border p-5 md:p-6">
+            {isAdminMode && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="businessName">{t("shopName")}</Label>
+                  <Input
+                    id="businessName"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessArea">{t("area")}</Label>
+                  <Input
+                    id="businessArea"
+                    value={businessArea}
+                    onChange={(e) => setBusinessArea(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>{t("coverImageUrl")}</Label>
               <div className="flex flex-wrap gap-2">

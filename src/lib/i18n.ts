@@ -121,15 +121,19 @@ export const dictionary = {
   edited: "edited",
   categoryPickOrType: "Select from the list or type a new category name.",
   addCategoryPrefix: "Add new category",
-  staleRatesBadge: "Rate purana ho sakta hai",
+  staleRatesBadge: "Rates may be outdated",
   staleRatesNotice:
-    "Is business ki rates 7 din se update nahi hui. Contact karne se pehle WhatsApp par confirm kar lein.",
-  weeklyContacts: "Is hafte {count} logon ne aapko contact kiya",
+    "This business has not updated prices in 7 days. Confirm on WhatsApp before ordering.",
+  weeklyContacts: "{count} people contacted you this week",
   pendingApproval:
-    "Aapki listing review mein hai. Admin approve karne ke baad public dikhegi.",
-  sendReminder: "Reminder bhejein",
-  reminderSent: "Reminder bhej di gayi.",
+    "Your listing is under review. It will appear publicly after admin approval.",
+  sendReminder: "Send reminder",
+  reminderSent: "Reminder sent successfully.",
   approvalPending: "Pending approval",
+  adminPanel: "Admin Panel",
+  adminManagingBusiness: "Managing Business",
+  manageBusiness: "Manage",
+  backToAdmin: "Back to Admin Panel",
 } as const;
 
 export type DictionaryKey = keyof typeof dictionary;

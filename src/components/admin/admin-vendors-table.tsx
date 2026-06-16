@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useTranslation } from "@/components/locale-toggle";
 import type { ApprovalStatus, Vendor } from "@/types/database";
 
 interface AdminVendorsTableProps {
@@ -25,6 +27,7 @@ const statusVariant: Record<ApprovalStatus, "default" | "secondary" | "outline">
 };
 
 export function AdminVendorsTable({ initialVendors }: AdminVendorsTableProps) {
+  const { t } = useTranslation();
   const [vendors, setVendors] = useState(initialVendors);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +115,9 @@ export function AdminVendorsTable({ initialVendors }: AdminVendorsTableProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="secondary" asChild>
+                          <Link href={`/admin/vendors/${vendor.id}`}>{t("manageBusiness")}</Link>
+                        </Button>
                         {vendor.approval_status !== "approved" && (
                           <Button
                             size="sm"

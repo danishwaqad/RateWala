@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { BusinessDashboard } from "@/components/dashboard/business-dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { isAdminEmail } from "@/lib/auth/admin";
 import { getWeeklyClickCount } from "@/lib/data/clicks";
-import { t } from "@/lib/i18n";
 
 export const metadata: Metadata = {
   title: "My Business — RateWala",
@@ -32,6 +32,9 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   if (!vendor) {
+    if (isAdminEmail(user.email)) {
+      redirect("/admin");
+    }
     redirect("/add-shop");
   }
 

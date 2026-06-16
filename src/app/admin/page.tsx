@@ -19,7 +19,7 @@ export default async function AdminPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Admin Panel</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Approve new listings and manage verified badges.
+          Approve listings, manage verified badges, and edit any business.
         </p>
       </div>
 
