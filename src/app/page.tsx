@@ -4,20 +4,22 @@ import { CategoryGrid } from "@/components/category-grid";
 import { FeaturedVendors } from "@/components/featured-vendors";
 import { SectionHeader } from "@/components/section-header";
 import { getCategories, getFeaturedVendors } from "@/lib/data/vendors";
+import { getPlatformStats } from "@/lib/data/stats";
 import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [categories, featuredVendors] = await Promise.all([
+  const [categories, featuredVendors, stats] = await Promise.all([
     getCategories(),
     getFeaturedVendors(),
+    getPlatformStats(),
   ]);
 
   return (
     <>
       <HeroSection />
-      <StatsSection />
+      <StatsSection stats={stats} />
 
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">

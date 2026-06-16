@@ -2,22 +2,41 @@
 
 import { Store, Truck, Tags } from "lucide-react";
 import { useTranslation } from "@/components/locale-toggle";
-import { STATS } from "@/lib/data/sample-data";
+import type { PlatformStats } from "@/lib/data/stats";
 import { cn } from "@/lib/utils";
 
-export function StatsSection() {
+interface StatsSectionProps {
+  stats: PlatformStats;
+}
+
+export function StatsSection({ stats }: StatsSectionProps) {
   const { t } = useTranslation();
 
-  const stats = [
-    { icon: Store, value: `${STATS.restaurants}+`, label: t("restaurants"), accent: "from-teal-500/10 to-teal-600/5" },
-    { icon: Truck, value: `${STATS.suppliers}+`, label: t("suppliers"), accent: "from-orange-500/10 to-orange-600/5" },
-    { icon: Tags, value: `${STATS.rates.toLocaleString()}+`, label: t("rates"), accent: "from-slate-500/10 to-slate-600/5" },
+  const items = [
+    {
+      icon: Store,
+      value: stats.restaurants.toLocaleString("en-PK"),
+      label: t("restaurants"),
+      accent: "from-teal-500/10 to-teal-600/5",
+    },
+    {
+      icon: Truck,
+      value: stats.suppliers.toLocaleString("en-PK"),
+      label: t("suppliers"),
+      accent: "from-orange-500/10 to-orange-600/5",
+    },
+    {
+      icon: Tags,
+      value: stats.products.toLocaleString("en-PK"),
+      label: t("rates"),
+      accent: "from-slate-500/10 to-slate-600/5",
+    },
   ];
 
   return (
     <section className="container relative z-10 mx-auto -mt-8 px-4 pb-4 md:-mt-10">
       <div className="grid gap-4 sm:grid-cols-3">
-        {stats.map((stat) => (
+        {items.map((stat) => (
           <div
             key={stat.label}
             className={cn(
